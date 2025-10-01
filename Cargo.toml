@@ -4,3 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.100"
+colog = "1.4.0"
+egui = "0.31.1"
+egui_glium = "0.31.1"
+glam = "0.30.8"
+glium = "0.36.0"
+gltf = "1.4.1"
+image = "0.25.8"
+log = "0.4.28"
