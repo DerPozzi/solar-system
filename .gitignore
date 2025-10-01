@@ -1,0 +1,21 @@
+# Rust / Cargo
+target/
+**/*.rs.bk
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-spezifisch
+.DS_Store
+Thumbs.db
+
+# Logs & temporäre Dateien
+*.log
+*.tmp
+
+# Build-Artefakte
+*.lock
+
