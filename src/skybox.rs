@@ -27,7 +27,7 @@ impl Skybox {
                 None,
             )
             .unwrap(),
-            cubemap: Cubemap::empty(display, 512).unwrap(), // Placeholder, will be filled later
+            cubemap: Cubemap::empty(display, 2048).unwrap(), // Placeholder, will be filled later
             index_buffer: glium::IndexBuffer::new(
                 display,
                 glium::index::PrimitiveType::TrianglesList,
@@ -50,8 +50,8 @@ pub fn upload_sky_box(app: &App) {
     let dest_rect1 = glium::BlitTarget {
         left: 0,
         bottom: 0,
-        width: 512,
-        height: 512,
+        width: 2048,
+        height: 2048,
     };
 
     let display = &app.glium_attributes.display;
@@ -149,12 +149,12 @@ fn load_skybox_textures(display: &Display<WindowSurface>) -> Vec<Texture2d> {
     info!("Loading skybox textures...");
     let base_path = "assets/skybox/";
     let face_filenames = [
-        "right.png",  // Positive X
-        "left.png",   // Negative X
-        "top.png",    // Positive Y
-        "bottom.png", // Negative Y
-        "front.png",  // Positive Z
-        "back.png",   // Negative Z
+        "GalaxyTex_PositiveX.png",  // Positive X
+        "GalaxyTex_NegativeX.png",   // Negative X
+        "GalaxyTex_PositiveY.png",    // Positive Y
+        "GalaxyTex_NegativeY.png", // Negative Y
+        "GalaxyTex_PositiveZ.png",  // Positive Z
+        "GalaxyTex_NegativeZ.png",   // Negative Z
     ];
 
     let time_start = std::time::Instant::now();
