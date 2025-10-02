@@ -2,7 +2,7 @@ use std::{collections::HashSet, time::Instant};
 
 use anyhow::Result;
 
-use egui::{CentralPanel, TextWrapMode, ViewportId};
+use egui::{TextWrapMode, ViewportId};
 use glium::{
     Surface,
     glutin::surface::WindowSurface,
