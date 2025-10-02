@@ -2,7 +2,7 @@ use std::{collections::HashSet, time::Instant};
 
 use anyhow::Result;
 
-use egui::{TextWrapMode, ViewportId};
+use egui::{CentralPanel, TextWrapMode, ViewportId};
 use glium::{
     Surface,
     glutin::surface::WindowSurface,
@@ -11,8 +11,8 @@ use glium::{
         application::ApplicationHandler,
         event::{DeviceEvent, DeviceId, WindowEvent},
         event_loop::{ActiveEventLoop, EventLoop},
-        keyboard::PhysicalKey,
-        window::{Window, WindowId},
+        keyboard::{KeyCode, PhysicalKey},
+        window::{CursorGrabMode, Window, WindowId},
     },
 };
 use log::debug;
@@ -24,8 +24,15 @@ pub struct GliumAttributes {
     pub display: glium::Display<WindowSurface>,
 }
 
+struct Settings {
+    // Add any settings you want to manage here
+    show_ui: bool,
+    show_fps: bool,
+}
+
 pub struct App {
     egui_glium: egui_glium::EguiGlium,
+    settings: Settings,
     pub glium_attributes: GliumAttributes,
     delta_time: f32,
     last_frame: std::time::Instant,
@@ -35,12 +42,58 @@ pub struct App {
 }
 
 impl App {
+    fn draw_ui(&mut self) {
+        // Draw your UI here with egui
+
+        let egui_glium = &mut self.egui_glium;
+        let window = &self.glium_attributes.window;
+        egui_glium.run(window, |egui_ctx| {
+            if self.settings.show_fps {
+                egui::Area::new("fps_hud".into())
+                    .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 10.0))
+                    .order(egui::Order::Foreground)
+                    .show(egui_ctx, |ui| {
+                        ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
+                        egui::Frame::NONE
+                            .fill(egui::Color32::TRANSPARENT)
+                            .corner_radius(6.0)
+                            .inner_margin(egui::Margin::symmetric(8, 4))
+                            .show(ui, |ui| {
+                                ui.monospace(format!("{:.0}", 1.0 / self.delta_time));
+                            });
+                    });
+            }
+
+            egui::SidePanel::left("general_ui").show_animated(
+                egui_ctx,
+                self.settings.show_ui,
+                |ui| {
+                    ui.heading("General Settings");
+                    ui.separator();
+                    ui.checkbox(&mut self.settings.show_fps, "Show FPS");
+                    ui.label("Press ESC to toggle this menu");
+                    ui.label("Press F2 to toggle FPS display");
+                    ui.separator();
+                    ui.button("Quit")
+                        .on_hover_text("Quit the application")
+                        .clicked()
+                        .then(|| {
+                            std::process::exit(0);
+                        });
+                },
+            );
+        });
+    }
     pub fn new(event_loop: &EventLoop<()>, glium_attributes: GliumAttributes) -> Self {
         let dist = 10_000.0;
         let fov = 90.0;
         let camera = Camera::new(fov, dist);
         let skybox = Skybox::init(&glium_attributes.display, dist);
         let keys_pressed: HashSet<PhysicalKey> = std::collections::HashSet::new();
+        let settings = Settings {
+            show_ui: false,
+            show_fps: true,
+        };
         let egui_glium = egui_glium::EguiGlium::new(
             ViewportId::ROOT,
             &glium_attributes.display,
@@ -53,6 +106,7 @@ impl App {
             delta_time: 0.0,
             last_frame: Instant::now(),
             skybox,
+            settings,
             camera,
             keys_pressed,
         }
@@ -120,28 +174,61 @@ impl ApplicationHandler for App {
             }
 
             WindowEvent::RedrawRequested => {
-                let egui_glium = &mut self.egui_glium;
-                let window = &self.glium_attributes.window;
-                egui_glium.run(window, |egui_ctx| {
-                    egui::Area::new("fps_hud".into())
-                        .anchor(egui::Align2::RIGHT_TOP, egui::vec2(-10.0, 10.0))
-                        .order(egui::Order::Foreground)
-                        .show(egui_ctx, |ui| {
-                            ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                            egui::Frame::NONE
-                                .fill(egui::Color32::TRANSPARENT)
-                                .corner_radius(6.0)
-                                .inner_margin(egui::Margin::symmetric(8, 4))
-                                .show(ui, |ui| {
-                                    ui.monospace(format!("{:.0}", 1.0 / self.delta_time));
-                                });
-                        });
-                });
+                if self.settings.show_ui {
+                    self.glium_attributes
+                        .window
+                        .set_cursor_grab(CursorGrabMode::None)
+                        .ok();
+                    self.glium_attributes.window.set_cursor_visible(true);
+                } else {
+                    self.glium_attributes
+                        .window
+                        .set_cursor_grab(CursorGrabMode::Confined)
+                        .or_else(|_e| {
+                            self.glium_attributes
+                                .window
+                                .set_cursor_grab(CursorGrabMode::Locked)
+                        })
+                        .unwrap();
+                    self.glium_attributes.window.set_cursor_visible(false);
+                }
+
+                self.draw_ui();
 
                 let _ = self.redraw();
             }
 
+            WindowEvent::KeyboardInput {
+                device_id,
+                event,
+                is_synthetic,
+            } => {
+                let _ = device_id;
+                let _ = is_synthetic;
+                let keycode = event.physical_key;
+                match event.state {
+                    winit::event::ElementState::Pressed => {
+                        self.keys_pressed.insert(keycode);
+                        if keycode == PhysicalKey::Code(KeyCode::Escape) {
+                            self.settings.show_ui = !self.settings.show_ui;
+                        }
+                        if keycode == PhysicalKey::Code(KeyCode::F2) {
+                            self.settings.show_fps = !self.settings.show_fps;
+                        }
+                    }
+                    winit::event::ElementState::Released => {
+                        self.keys_pressed.remove(&keycode);
+                    }
+                }
+            }
+
             _ => {}
+        }
+        let event_response = self
+            .egui_glium
+            .on_event(&self.glium_attributes.window, &event);
+        if event_response.repaint {
+            self.glium_attributes.window.request_redraw();
         }
     }
     fn new_events(&mut self, event_loop: &ActiveEventLoop, cause: winit::event::StartCause) {
@@ -164,15 +251,15 @@ impl ApplicationHandler for App {
     ) {
         match event {
             DeviceEvent::MouseMotion { delta } => {
-                // if !self.ui_visible {
-                let mouse_sensitivity = 0.001;
-                self.camera.add_to_yaw_pitch(
-                    -delta.0 as f32 * mouse_sensitivity, // yaw
-                    -delta.1 as f32 * mouse_sensitivity, // pitch
-                );
+                if !self.settings.show_ui {
+                    let mouse_sensitivity = 0.001;
+                    self.camera.add_to_yaw_pitch(
+                        -delta.0 as f32 * mouse_sensitivity, // yaw
+                        -delta.1 as f32 * mouse_sensitivity, // pitch
+                    );
 
-                self.camera.apply_yaw_pitch();
-                // }
+                    self.camera.apply_yaw_pitch();
+                }
             }
             DeviceEvent::MouseWheel { delta } => {
                 let _ = delta;
