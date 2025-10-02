@@ -1,8 +1,10 @@
 use anyhow::Result;
 use std::{fs::File, io::BufReader};
 
-use glium::{Display, Texture2d, glutin::surface::WindowSurface, texture::Cubemap};
-use log::{debug, info};
+use glium::{Display, Surface, Texture2d, glutin::surface::WindowSurface, texture::Cubemap};
+use log::{ info};
+
+use crate::egui_setup::App;
 
 pub struct Skybox {
     pub textures: Vec<Texture2d>,
@@ -42,6 +44,105 @@ impl Skybox {
             .unwrap(),
         }
     }
+}
+
+pub fn upload_sky_box(app: &App) {
+    let dest_rect1 = glium::BlitTarget {
+        left: 0,
+        bottom: 0,
+        width: 512,
+        height: 512,
+    };
+
+    let display = &app.glium_attributes.display;
+    let skybox = &app.skybox;
+
+    let framebuffer1 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::PositiveX),
+    )
+    .unwrap();
+    let framebuffer2 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::NegativeX),
+    )
+    .unwrap();
+    let framebuffer3 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::PositiveY),
+    )
+    .unwrap();
+    let framebuffer4 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::NegativeY),
+    )
+    .unwrap();
+    let framebuffer5 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::PositiveZ),
+    )
+    .unwrap();
+    let framebuffer6 = glium::framebuffer::SimpleFrameBuffer::new(
+        display,
+        skybox
+            .cubemap
+            .main_level()
+            .image(glium::texture::CubeLayer::NegativeZ),
+    )
+    .unwrap();
+
+    let tex_posx = &skybox.textures[0];
+    let tex_negx = &skybox.textures[1];
+    let tex_posy = &skybox.textures[2];
+    let tex_negy = &skybox.textures[3];
+    let tex_posz = &skybox.textures[4];
+    let tex_negz = &skybox.textures[5];
+
+    tex_posx.as_surface().blit_whole_color_to(
+        &framebuffer1,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
+    tex_negx.as_surface().blit_whole_color_to(
+        &framebuffer2,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
+    tex_negy.as_surface().blit_whole_color_to(
+        &framebuffer3,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
+    tex_posy.as_surface().blit_whole_color_to(
+        &framebuffer4,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
+    tex_posz.as_surface().blit_whole_color_to(
+        &framebuffer5,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
+    tex_negz.as_surface().blit_whole_color_to(
+        &framebuffer6,
+        &dest_rect1,
+        glium::uniforms::MagnifySamplerFilter::Linear,
+    );
 }
 
 fn load_skybox_textures(display: &Display<WindowSurface>) -> Vec<Texture2d> {
