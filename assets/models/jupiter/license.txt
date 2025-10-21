@@ -1,0 +1,11 @@
+Model Information:
+* title:	Jupiter
+* source:	https://sketchfab.com/3d-models/jupiter-71d39a0a6892498ab8b1c8f77feba842
+* author:	Anthony Yanez (https://sketchfab.com/paulyanez)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Jupiter" (https://sketchfab.com/3d-models/jupiter-71d39a0a6892498ab8b1c8f77feba842) by Anthony Yanez (https://sketchfab.com/paulyanez) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
