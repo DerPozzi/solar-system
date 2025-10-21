@@ -10,6 +10,7 @@ egui = "0.31.1"
 egui_glium = "0.31.1"
 glam = "0.30.8"
 glium = "0.36.0"
-gltf = "1.4.1"
+gltf = {version = "1.4.1", features = ["KHR_materials_pbrSpecularGlossiness"]}
 image = "0.25.8"
 log = "0.4.28"
+

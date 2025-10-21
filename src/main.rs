@@ -12,11 +12,13 @@ use log::info;
 
 use crate::{
     egui_setup::{App, GliumAttributes},
+    gltf_loader::load_cb_from_gltf,
     skybox::upload_sky_box,
 };
 
 mod camera;
 mod egui_setup;
+mod gltf_loader;
 mod skybox;
 
 #[macro_use]
@@ -42,6 +44,20 @@ fn main() -> Result<()> {
         .or_else(|_e| window.set_cursor_grab(CursorGrabMode::Locked))?;
 
     window.set_cursor_visible(false);
+
+    let celestial_bodies_names = vec![
+        "Earth",
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Jupiter",
+        "Uranus",
+        "Neptune",
+        "Sun",
+        "Saturn",
+    ];
+
+    let _celestial_bodies = load_cb_from_gltf(celestial_bodies_names, &display)?;
 
     let mut app = App::new(&event_loop, GliumAttributes { window, display });
 
