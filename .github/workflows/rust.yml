@@ -1,0 +1,41 @@
+
+
+name: rust
+
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  build-and-test:
+    name: build & test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    env:
+      CARGO_TERM_COLOR: always
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Cache cargo/target
+        uses: swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+
+      - name: Build
+        run: cargo build --locked --all-targets --verbose
+
+      - name: Test
+        run: cargo test --locked --all-features --verbose
