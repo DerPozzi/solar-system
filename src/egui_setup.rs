@@ -201,6 +201,10 @@ impl ApplicationHandler for App {
                 let _ = self.redraw();
             }
 
+            WindowEvent::CloseRequested => {
+                std::process::exit(0);
+            }
+
             WindowEvent::KeyboardInput {
                 device_id,
                 event,
@@ -210,18 +214,20 @@ impl ApplicationHandler for App {
                 let _ = is_synthetic;
                 let keycode = event.physical_key;
                 match event.state {
-                    winit::event::ElementState::Pressed => {
-                        self.keys_pressed.insert(keycode);
-                        if keycode == PhysicalKey::Code(KeyCode::Escape) {
+                    winit::event::ElementState::Pressed => match keycode {
+                        PhysicalKey::Code(KeyCode::Escape) => {
                             self.settings.show_ui = !self.settings.show_ui;
                         }
-                        if keycode == PhysicalKey::Code(KeyCode::F2) {
+                        PhysicalKey::Code(KeyCode::F2) => {
                             self.settings.show_fps = !self.settings.show_fps;
                         }
-                        if keycode == PhysicalKey::Code(KeyCode::F11) {
+                        PhysicalKey::Code(KeyCode::F11) => {
                             self.settings.fullscreen = !self.settings.fullscreen;
                         }
-                    }
+                        _ => {
+                            self.keys_pressed.insert(keycode);
+                        }
+                    },
                     winit::event::ElementState::Released => {
                         self.keys_pressed.remove(&keycode);
                     }
@@ -300,6 +306,7 @@ impl ApplicationHandler for App {
 
     fn exiting(&mut self, event_loop: &ActiveEventLoop) {
         let _ = event_loop;
+        println!("Exiting");
     }
 
     fn memory_warning(&mut self, event_loop: &ActiveEventLoop) {
