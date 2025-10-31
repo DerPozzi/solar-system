@@ -12,7 +12,7 @@ use glium::{
         event::{DeviceEvent, DeviceId, WindowEvent},
         event_loop::{ActiveEventLoop, EventLoop},
         keyboard::{KeyCode, PhysicalKey},
-        window::{CursorGrabMode, Window, WindowId},
+        window::{CursorGrabMode, Fullscreen, Window, WindowId},
     },
 };
 use log::debug;
@@ -28,6 +28,7 @@ struct Settings {
     // Add any settings you want to manage here
     show_ui: bool,
     show_fps: bool,
+    fullscreen: bool,
 }
 
 pub struct App {
@@ -73,6 +74,7 @@ impl App {
                     ui.checkbox(&mut self.settings.show_fps, "Show FPS");
                     ui.label("Press ESC to toggle this menu");
                     ui.label("Press F2 to toggle FPS display");
+                    ui.label("Press F11 to toggle fullscreen");
                     ui.separator();
                     ui.button("Quit")
                         .on_hover_text("Quit the application")
@@ -93,6 +95,7 @@ impl App {
         let settings = Settings {
             show_ui: false,
             show_fps: true,
+            fullscreen: false,
         };
         let egui_glium = egui_glium::EguiGlium::new(
             ViewportId::ROOT,
@@ -215,6 +218,9 @@ impl ApplicationHandler for App {
                         if keycode == PhysicalKey::Code(KeyCode::F2) {
                             self.settings.show_fps = !self.settings.show_fps;
                         }
+                        if keycode == PhysicalKey::Code(KeyCode::F11) {
+                            self.settings.fullscreen = !self.settings.fullscreen;
+                        }
                     }
                     winit::event::ElementState::Released => {
                         self.keys_pressed.remove(&keycode);
@@ -276,6 +282,13 @@ impl ApplicationHandler for App {
 
         self.delta_time = self.last_frame.elapsed().as_secs_f32();
         self.last_frame = std::time::Instant::now();
+
+        let set_fullscreen = if self.settings.fullscreen {
+            Some(Fullscreen::Borderless(None))
+        } else {
+            None
+        };
+        self.glium_attributes.window.set_fullscreen(set_fullscreen);
 
         self.camera
             .update_camera(&self.keys_pressed, self.delta_time);
